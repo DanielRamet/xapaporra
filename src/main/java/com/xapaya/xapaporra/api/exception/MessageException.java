@@ -1,4 +1,4 @@
-package com.xapaya.olivapp.jobs.controller.exception;
+package com.xapaya.xapaporra.api.exception;
 
 public class MessageException extends RuntimeException {
     public MessageException(String text) {

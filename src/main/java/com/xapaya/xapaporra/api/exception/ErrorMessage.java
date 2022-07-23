@@ -1,4 +1,4 @@
-package com.xapaya.olivapp.jobs.controller.exception;
+package com.xapaya.xapaporra.api.exception;
 
 
 import lombok.AllArgsConstructor;

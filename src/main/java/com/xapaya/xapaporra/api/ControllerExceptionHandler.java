@@ -1,7 +1,7 @@
-package com.xapaya.olivapp.jobs.controller;
+package com.xapaya.xapaporra.api;
 
-import com.xapaya.olivapp.jobs.controller.exception.ErrorMessage;
-import com.xapaya.olivapp.jobs.controller.exception.MessageException;
+import com.xapaya.xapaporra.api.exception.ErrorMessage;
+import com.xapaya.xapaporra.api.exception.MessageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;

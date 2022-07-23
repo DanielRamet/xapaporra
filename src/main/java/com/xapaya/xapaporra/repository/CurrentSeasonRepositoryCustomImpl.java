@@ -10,20 +10,28 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.Calendar;
+
 @RequiredArgsConstructor
 @Slf4j
-public class CurrentRepositoryCustomImpl implements CurrentSeasonRepositoryCustom {
+public class CurrentSeasonRepositoryCustomImpl implements CurrentSeasonRepositoryCustom {
 
     private final MongoTemplate mongoTemplate;
 
     @Override
     public void upsert(CurrentSeasonDto dto) {
-        Query query = new Query(Criteria.where("competitionCode").is(dto.getCompetitionCode()));
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dto.getStartDate());
+
+        Query query = new Query(Criteria.where("competitionCode")
+                .is(dto.getCompetitionCode())
+                .andOperator(Criteria.where("season")
+                        .is(calendar.get(Calendar.YEAR))));
         UpdateResult updateResult = mongoTemplate.upsert(query,
-                new Update().addToSet("startDate", dto.getStartDate())
-                        .addToSet("endDate", dto.getEndDate())
-                        .addToSet("currentMatchday", dto.getCurrentMatchDay()),
+                new Update().set("startDate", dto.getStartDate())
+                        .set("endDate", dto.getEndDate())
+                        .set("currentMatchday", dto.getCurrentMatchDay()),
                 CurrentSeason.class);
-        log.info("update results: {}", updateResult);
+        log.info("Upsert current season {}. Update results: {}", dto, updateResult);
     }
 }

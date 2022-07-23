@@ -10,4 +10,5 @@ public class CurrentSeasonDto {
     private Date startDate;
     private Date endDate;
     private int currentMatchDay;
+    private String competitionCode;
 }
