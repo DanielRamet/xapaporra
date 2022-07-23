@@ -38,10 +38,15 @@ public class FootballController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/laliga/matches/{season}")
-    public ResponseEntity<?> updateMatches(@PathVariable int season) {
-        // TODO:
-        //service.insertMatches(properties.getFootballData().getLeagues().getLaliga(), season);
+    @PostMapping("/laliga/matches/{season}")
+    public ResponseEntity<?> insertMatches(@PathVariable int season) {
+        service.insertMatches(properties.getFootballData().getLeagues().getLaliga(), season);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/laliga/matches/{season}")
+    public ResponseEntity<?> deleteMatches(@PathVariable int season) {
+        service.deleteMatches(properties.getFootballData().getLeagues().getLaliga(), season);
         return ResponseEntity.ok().build();
     }
 }

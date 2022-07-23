@@ -2,6 +2,7 @@ package com.xapaya.xapaporra.service;
 
 import com.xapaya.xapaporra.api.exception.MessageException;
 import com.xapaya.xapaporra.model.CurrentSeason;
+import com.xapaya.xapaporra.model.Match;
 import com.xapaya.xapaporra.model.Team;
 import com.xapaya.xapaporra.repository.CurrentSeasonRepository;
 import com.xapaya.xapaporra.repository.MatchRepository;
@@ -53,7 +54,7 @@ public class FootballService {
                     .collectList()
                     .log()
                     .map(teamRepository::saveAll)
-                    .blockOptional().get();
+                    .blockOptional().orElseGet(null);
         } else {
             throw new MessageException("Not exists season " + season);
         }
@@ -68,6 +69,10 @@ public class FootballService {
     }
 
     public void insertMatches(String competitionCode, int season) {
+        if(matchRepository.existsByCompetitionCodeAndSeason(competitionCode, season)) {
+            throw new MessageException("Already exists matches for " + competitionCode  + " " + season);
+        }
+
         webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/competitions/" + competitionCode + "/matches")
                         .queryParam("season", season)
@@ -75,7 +80,18 @@ public class FootballService {
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(s -> footballDataOrgMapper.mapMatches(s, competitionCode, season))
-                .doOnNext(matchRepository::saveAll)
+                .map(matchRepository::saveAll)
+                .doOnSuccess(list -> log.info("saved {} matches", list.size()))
+                .doOnError(e -> log.error(e.getMessage()))
                 .subscribe();
+    }
+
+    public void deleteMatches(String competitionCode, int season) {
+        List<Match> matches = matchRepository.findMatchesByCompetitionCodeAndSeason(competitionCode, season);
+        if (matches != null && matches.size() > 0) {
+            log.info("removing {} matches for {} {} ... ", matches.size(), competitionCode, season);
+            matchRepository.deleteAll(matches);
+            log.info("removed {} matches for {} {} ... ", matches.size(), competitionCode, season);
+        }
     }
 }
