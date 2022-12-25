@@ -3,7 +3,7 @@ spring:
   data:
     mongodb:
       uri: mongodb+srv://xapaya:LcDn7lrChVCtH82u@xapacluster.6onaa.mongodb.net/?retryWrites=true&w=majority
-      database: porrappdb
+      database: footballdb
 
 app:
   football-data:
@@ -11,3 +11,5 @@ app:
     api-token: 43f78b17ba314f66854a7fab1120fac9
     leagues:
       laliga: PD
+  quinicheck:
+    base-url: https://www.loteriasyapuestas.es/servicios/buscadorSorteos
