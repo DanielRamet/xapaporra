@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -36,6 +37,11 @@ public class QuinicheckController {
                 .toEntity(String.class).block()).getBody();
     }
 
+    @GetMapping("/matchday")
+    public ResponseEntity<?> getBets(@RequestParam long season, @RequestParam long matchday) {
+        return ResponseEntity.ok(quinicheckService.getBets(season, matchday));
+    }
+
     @PutMapping("/matchday")
     public ResponseEntity<?> addBet(@RequestBody MatchDayDto request) {
         String message = quinicheckService.validate(request);
@@ -44,5 +50,14 @@ public class QuinicheckController {
         }
 
         return ResponseEntity.badRequest().body(message);
+    }
+
+    @PutMapping("/latest-hints")
+    public ResponseEntity<?> updateLatestHints(@RequestParam long season) {
+        if(season < 2023){
+            return ResponseEntity.badRequest().body("Bad Request, season must be from 2023");
+        }
+
+        return ResponseEntity.ok(quinicheckService.updateLatestHints(season));
     }
 }
