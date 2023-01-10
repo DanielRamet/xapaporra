@@ -102,7 +102,7 @@ public class QuinicheckService {
                         JSONObject match = matches.getJSONObject(i);
                         Long betIndex = match.getLong("posicion");
                         Object result = match.get("signo");
-                        betResults.put(betIndex, result != null ? result.toString() : "");
+                        betResults.put(betIndex, result != null ? result.toString().trim() : "");
                     }
                     return updateBets(betResults, matchdays).stream()
                             .map(MatchDayDto::from)
@@ -119,7 +119,7 @@ public class QuinicheckService {
             long hints = 0;
             char[] bets = player.getBet().toCharArray();
             for(int i = 0; i < bets.length; i++) {
-                if (String.valueOf(bets[i]).equals(betResults.get((long) (i + 1)))) {
+                if (String.valueOf(bets[i]).equalsIgnoreCase(betResults.get((long) (i + 1)))) {
                     hints++;
                 }
             }
