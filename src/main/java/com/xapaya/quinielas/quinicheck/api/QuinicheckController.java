@@ -12,9 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/quinicheck")
@@ -22,20 +19,7 @@ import java.util.Objects;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class QuinicheckController {
 
-    private final WebClient webClientQuinicheck;
     private final QuinicheckService quinicheckService;
-
-    @GetMapping
-    public String proxyData() {
-        return Objects.requireNonNull(webClientQuinicheck.get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("game_id", "LAQU")
-                        .queryParam("fechaInicioInclusiva", "20220814")
-                        .queryParam("fechaFinInclusiva", "20991231")
-                        .build())
-                .retrieve()
-                .toEntity(String.class).block()).getBody();
-    }
 
     @GetMapping("/matchday")
     public ResponseEntity<?> getBets(@RequestParam long season, @RequestParam long matchday) {
@@ -53,11 +37,7 @@ public class QuinicheckController {
     }
 
     @PutMapping("/latest-hints")
-    public ResponseEntity<?> updateLatestHints(@RequestParam long season) {
-        if(season < 2023){
-            return ResponseEntity.badRequest().body("Bad Request, season must be from 2023");
-        }
-
-        return ResponseEntity.ok(quinicheckService.updateLatestHints(season));
+    public ResponseEntity<?> updateLatestHints() {
+        return ResponseEntity.ok(quinicheckService.updateLatestHints());
     }
 }

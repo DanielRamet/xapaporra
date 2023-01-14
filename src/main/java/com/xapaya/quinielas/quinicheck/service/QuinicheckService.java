@@ -1,22 +1,19 @@
 package com.xapaya.quinielas.quinicheck.service;
 
 import com.xapaya.quinielas.quinicheck.api.dto.MatchDayDto;
+import com.xapaya.quinielas.quinicheck.dto.FootballDataResults;
+import com.xapaya.quinielas.quinicheck.dto.MatchResult;
 import com.xapaya.quinielas.quinicheck.model.Matchday;
 import com.xapaya.quinielas.quinicheck.repository.QuinicheckRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import java.net.URI;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.Month;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +22,7 @@ import java.util.stream.Collectors;
 public class QuinicheckService {
 
     private final QuinicheckRepository quinicheckRepository;
-    private final WebClient webClientQuinicheck;
+    private final LoteriasYApuestasService loteriasYApuestasService;
 
     public List<MatchDayDto> getBets(long season, long matchday) {
         return quinicheckRepository.findBySeasonAndMatchday(season, matchday)
@@ -66,60 +63,29 @@ public class QuinicheckService {
         return returned;
     }
 
-    public List<MatchDayDto> updateLatestHints(long season) {
-        LocalDate init = LocalDate.now().minusDays(2);
-        LocalDate end = LocalDate.now().plusDays(5);
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        String initStr = dateTimeFormatter.format(init);
-        String endStr = dateTimeFormatter.format(end);
-        String data = webClientQuinicheck.get()
-                .uri(uriBuilder ->{
-                    URI uri = uriBuilder
-                        .queryParam("game_id", "LAQU")
-                        .queryParam("fechaInicioInclusiva", initStr)
-                        .queryParam("fechaFinInclusiva", endStr)
-                        .queryParam("celebrados", false)
-                        .build();
-                    log.info("{}", uri.getQuery());
-                    return uri;
-                })
-                .retrieve()
-                .toEntity(String.class)
-                .doOnError(t -> log.error("Failing getting data", t))
-                .blockOptional()
-                .get().getBody();
-
-        if(data != null) {
-            final JSONArray arr = new JSONArray(data);
-            if(!arr.isEmpty()) {
-                final JSONObject obj = arr.getJSONObject(0);
-                long matchday = obj.getLong("jornada");
-                List<Matchday> matchdays = quinicheckRepository.findBySeasonAndMatchday(season, matchday);
-                if(!matchdays.isEmpty()) {
-                    final JSONArray matches = obj.getJSONArray("partidos");
-                    SortedMap<Long, String> betResults = new TreeMap<>();
-                    for (int i = 0; i < matches.length(); i++) {
-                        JSONObject match = matches.getJSONObject(i);
-                        Long betIndex = match.getLong("posicion");
-                        Object result = match.get("signo");
-                        betResults.put(betIndex, result != null ? result.toString().trim() : "");
-                    }
-                    return updateBets(betResults, matchdays).stream()
-                            .map(MatchDayDto::from)
-                            .collect(Collectors.toList());
-                }
+    public List<MatchDayDto> updateLatestHints() {
+        FootballDataResults latestResults = loteriasYApuestasService.getLatestMatchResults();
+        if(latestResults != null) {
+            long season = this.getCurrentSeason();
+            List<Matchday> matchdays = quinicheckRepository.findBySeasonAndMatchday(season, latestResults.getMatchday());
+            if(matchdays != null && !matchdays.isEmpty()) {
+                return updateBets(latestResults.getResults(), matchdays).stream()
+                        .map(MatchDayDto::from)
+                        .collect(Collectors.toList());
             }
         }
 
         return null;
     }
 
-    private List<Matchday> updateBets(SortedMap<Long, String> betResults, List<Matchday> players) {
+    private List<Matchday> updateBets(List<MatchResult> results, List<Matchday> players) {
+        Map<Long, String> mapResults = results.stream()
+                .collect(Collectors.toMap(MatchResult::getPosicion, MatchResult::getSigno));
         for (Matchday player : players) {
             long hints = 0;
             char[] bets = player.getBet().toCharArray();
             for(int i = 0; i < bets.length; i++) {
-                if (String.valueOf(bets[i]).equalsIgnoreCase(betResults.get((long) (i + 1)))) {
+                if (String.valueOf(bets[i]).equalsIgnoreCase(mapResults.get((long) (i + 1)))) {
                     hints++;
                 }
             }
@@ -127,5 +93,14 @@ public class QuinicheckService {
         }
 
         return quinicheckRepository.saveAll(players);
+    }
+
+    private long getCurrentSeason() {
+        LocalDate now = LocalDate.now();
+        long season = now.getYear();
+        if (now.getMonth().compareTo(Month.JUNE) > 0) {
+            season = now.getYear() + 1;
+        }
+        return season;
     }
 }
