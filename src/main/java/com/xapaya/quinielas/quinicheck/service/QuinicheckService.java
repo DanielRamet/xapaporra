@@ -1,5 +1,6 @@
 package com.xapaya.quinielas.quinicheck.service;
 
+import com.xapaya.quinielas.quinicheck.api.dto.BetResultDto;
 import com.xapaya.quinielas.quinicheck.api.dto.MatchDayDto;
 import com.xapaya.quinielas.quinicheck.dto.FootballDataResults;
 import com.xapaya.quinielas.quinicheck.dto.MatchResult;
@@ -12,8 +13,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +31,19 @@ public class QuinicheckService {
     public List<MatchDayDto> getBets(long season, long matchday) {
         return quinicheckRepository.findBySeasonAndMatchday(season, matchday)
                 .stream().map(MatchDayDto::from)
+                .collect(Collectors.toList());
+    }
+
+    public List<BetResultDto> getAll(Long season) {
+        List<MatchDayDto> dto = quinicheckRepository.findBySeason(season)
+                .stream().map(MatchDayDto::from).collect(Collectors.toList());
+
+        SortedMap<Long, List<MatchDayDto>> map = dto.stream().collect(Collectors.groupingBy(MatchDayDto::getMatchday,
+                TreeMap::new,
+                Collectors.toCollection(ArrayList::new)));
+
+        return map.keySet().stream()
+                .map(matchday -> BetResultDto.builder().matchday(matchday).bets(map.get(matchday)).build())
                 .collect(Collectors.toList());
     }
 

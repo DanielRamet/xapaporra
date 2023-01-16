@@ -21,9 +21,14 @@ public class QuinicheckController {
 
     private final QuinicheckService quinicheckService;
 
-    @GetMapping("/matchday")
-    public ResponseEntity<?> getBets(@RequestParam long season, @RequestParam long matchday) {
+    @GetMapping("/season/matchday")
+    public ResponseEntity<?> getBets(@RequestParam Long season, @RequestParam Long matchday) {
         return ResponseEntity.ok(quinicheckService.getBets(season, matchday));
+    }
+
+    @GetMapping("/season")
+    public ResponseEntity<?> getAllBets(@RequestParam Long season) {
+        return ResponseEntity.ok(quinicheckService.getAll(season));
     }
 
     @PutMapping("/matchday")
@@ -36,7 +41,7 @@ public class QuinicheckController {
         return ResponseEntity.badRequest().body(message);
     }
 
-    @PutMapping("/latest-hints")
+    @PutMapping("/latest-hits")
     public ResponseEntity<?> updateLatestHints() {
         return ResponseEntity.ok(quinicheckService.updateLatestHints());
     }

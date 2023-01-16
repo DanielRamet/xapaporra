@@ -1,6 +1,7 @@
 package com.xapaya.quinielas.quinicheck.repository;
 
 import com.xapaya.quinielas.quinicheck.model.Matchday;
+import com.xapaya.xapaporra.porra.model.Match;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,6 @@ public interface QuinicheckRepository extends MongoRepository<Matchday, String> 
     Matchday findBySeasonAndMatchdayAndPlayer(Long season, Long matchday, String name);
 
     List<Matchday> findBySeasonAndMatchday(Long season, Long matchday);
+
+    List<Matchday> findBySeason(Long season);
 }
