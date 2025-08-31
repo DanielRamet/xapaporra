@@ -30,6 +30,7 @@ public class LoteriasYApuestasService {
 
     public FootballDataResults getLatestMatchResults() {
         String data = this.getCurrentResults();
+        log.info("DATA: {}", data);
         return this.parseData(data);
     }
 
